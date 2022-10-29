@@ -2,6 +2,8 @@ package de.kai_morich.simple_usb_terminal;
 
 import static de.kai_morich.simple_usb_terminal.CH9329KeyCodeMap.ch9329NormalKeyCodeMap;
 
+import java.nio.charset.StandardCharsets;
+
 public class CH9329Util {
 
 
@@ -25,21 +27,39 @@ public class CH9329Util {
         byte dataSecondCode = 0x00;
         byte dataThirdCode = ch9329NormalKeyCodeMap.get(c);
 
-        byte[] codeswithoutSum = {dataFrameHead01, dataFrameHead02, addressCode, commandCode,
+        byte[] codesWithoutSum = {dataFrameHead01, dataFrameHead02, addressCode, commandCode,
                 dataLength, dataFirstCode, dataSecondCode, dataThirdCode, 0x0, 0x0, 0x0, 0x0};
 
-        int sum = 0;
-        for (int i = 0; i < codeswithoutSum.length; i++) {
-            sum += codeswithoutSum[i];
+        // get sum code
+        byte sum = 0;
+        for (byte b : codesWithoutSum) {
+            sum += b;
         }
-
         LogUtil.i(tag, "sum=" + sum);
-        LogUtil.i(tag, "sum as byte =" + (byte) sum);
 
-//        byte sum = dataFrameHead01 + dataFrameHead02 + addressCode + commandCode +
+        byte[] result = addX(12, codesWithoutSum, sum);
 
-
-        return frameHead;
-
+        return result;
     }
+
+    public static byte[] addX(int n, byte arr[], byte x)
+    {
+        int i;
+
+        // create a new array of size n+1
+        byte newarr[] = new byte[n + 1];
+
+        // insert the elements from
+        // the old array into the new array
+        // insert all elements till n
+        // then insert x at n+1
+        for (i = 0; i < n; i++)
+            newarr[i] = arr[i];
+
+        newarr[n] = x;
+
+        return newarr;
+    }
+
+
 }
