@@ -1,13 +1,19 @@
 package de.kai_morich.simple_usb_terminal;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-import org.junit.jupiter.api.Test;
-
+import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.stream.IntStream;
 
-public class CH9329UtilTest {
+public class MiscUtil {
+
+    //    https://stackoverflow.com/questions/5368704/appending-a-byte-to-the-end-of-another-byte
+    public static byte[] concatenateByteArrays(byte[] a, byte[] b) {
+        byte[] result = new byte[a.length + b.length];
+        System.arraycopy(a, 0, result, 0, a.length);
+        System.arraycopy(b, 0, result, a.length, b.length);
+        return result;
+    }
 
     private static final byte[] HEX_ARRAY = "0123456789ABCDEF".getBytes(StandardCharsets.US_ASCII);
 
@@ -34,24 +40,8 @@ public class CH9329UtilTest {
         return s;
     }
 
-    @Test
-    void fromStringToHex() {
-    }
-
-    @Test
-    void givenChar_fromCharToHex_returnsCH9329HexCodes() {
-
-        byte[] actual = CH9329Util.fromCharToHex('a');
-        LogUtil.i("fromCharToHex", Arrays.toString(actual));
-        LogUtil.i("fromCharToHex", bytesToHexWithSpace(actual));
-
-        assertNotNull(actual);
-    }
-
-    @Test
-    void givenString_convertStringToCH9329Code_returnConvertedCodes() {
-//        byte[] actual = convertStringToCH9329Code("a");
-//        assertNotNull(actual);
-        MiscUtil.LogByteArray("", TextUtil.newline_crlf.getBytes());
+    public static void LogByteArray(String tag, byte[] bytes) {
+        LogUtil.i(tag, Arrays.toString(bytes));
+        LogUtil.i(tag, bytesToHexWithSpace(bytes));
     }
 }
