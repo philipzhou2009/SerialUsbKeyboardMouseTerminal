@@ -2,6 +2,7 @@ package de.kai_morich.simple_usb_terminal;
 
 import static de.kai_morich.simple_usb_terminal.CH9329Util.addNewLineToCH9329Code;
 import static de.kai_morich.simple_usb_terminal.CH9329Util.convertStringToCH9329Code;
+import static de.kai_morich.simple_usb_terminal.CH9329Util.getSendingKeyCode;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -100,7 +101,6 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         baudRate = getArguments().getInt("baud");
 
         Context context = getContext();
-
         // https://stackoverflow.com/questions/6812003/difference-between-oncreate-and-onstart
         // Load our JSON file.
         JSONResourceReader reader = new JSONResourceReader(context.getResources(), R.raw.ch9329_key_codes);
@@ -350,7 +350,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             } else {
                 msg = str;
 //                data = (str + newline).getBytes();
-                data = addNewLineToCH9329Code(convertStringToCH9329Code(str));
+                data = getSendingKeyCode(str);
                 Log.i("TerminalFragment", "No hexEnabled, data=" + Arrays.toString(data));
             }
             SpannableStringBuilder spn = new SpannableStringBuilder(msg + '\n');
