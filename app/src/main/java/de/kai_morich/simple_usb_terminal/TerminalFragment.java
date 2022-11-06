@@ -1,8 +1,7 @@
 package de.kai_morich.simple_usb_terminal;
 
-import static de.kai_morich.simple_usb_terminal.CH9329Util.addNewLineToCH9329Code;
-import static de.kai_morich.simple_usb_terminal.CH9329Util.convertStringToCH9329Code;
 import static de.kai_morich.simple_usb_terminal.CH9329Util.getSendingKeyCode;
+import static de.kai_morich.simple_usb_terminal.ch9329.CH9329KeyCodeMapData.loadCH9329KeyCodeDataFromContext;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -49,11 +48,7 @@ import com.hoho.android.usbserial.driver.UsbSerialProber;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.EnumSet;
-
-import de.kai_morich.simple_usb_terminal.models.CH9329KeyCodeData;
-import de.kai_morich.simple_usb_terminal.utils.JSONResourceReader;
 
 public class TerminalFragment extends Fragment implements ServiceConnection, SerialListener {
 
@@ -100,14 +95,9 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         portNum = getArguments().getInt("port");
         baudRate = getArguments().getInt("baud");
 
-        Context context = getContext();
         // https://stackoverflow.com/questions/6812003/difference-between-oncreate-and-onstart
-        // Load our JSON file.
-        JSONResourceReader reader = new JSONResourceReader(context.getResources(), R.raw.ch9329_key_codes);
-        CH9329KeyCodeData ch9329KeyCodeData = reader.constructUsingGson(CH9329KeyCodeData.class);
-        Log.i("TerminalFragment", Collections.singletonList(ch9329KeyCodeData.getCh9329NormalKeyCodeMap()).toString());
-        Log.i("TerminalFragment", Collections.singletonList(ch9329KeyCodeData.getCh9329ShiftKeyCodeMap()).toString());
-
+        Context context = getContext();
+        loadCH9329KeyCodeDataFromContext(context);
     }
 
     @Override
