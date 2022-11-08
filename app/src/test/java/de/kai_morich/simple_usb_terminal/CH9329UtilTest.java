@@ -89,7 +89,5 @@ public class CH9329UtilTest {
         CH9329KeyCodeData ch9329KeyCodeData = reader.constructUsingGson(CH9329KeyCodeData.class);
 
         assertNotNull(ch9329KeyCodeData);
-
-
     }
 }

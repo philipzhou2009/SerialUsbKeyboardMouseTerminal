@@ -45,6 +45,10 @@ public class MiscUtil {
         Log.i(tag, bytesToHexWithSpace(bytes));
     }
 
+    public static void LogByteArray(String tag, String prefix, byte[] bytes) {
+        Log.i(tag, prefix + bytesToHexWithSpace(bytes));
+    }
+
     public static byte[] addX(int n, byte arr[], byte x) {
         int i;
 

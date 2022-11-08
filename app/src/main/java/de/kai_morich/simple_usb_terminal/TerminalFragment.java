@@ -1,6 +1,7 @@
 package de.kai_morich.simple_usb_terminal;
 
 import static de.kai_morich.simple_usb_terminal.CH9329Util.getSendingKeyCode;
+import static de.kai_morich.simple_usb_terminal.MiscUtil.LogByteArray;
 import static de.kai_morich.simple_usb_terminal.ch9329.CH9329KeyCodeMapData.loadCH9329KeyCodeDataFromContext;
 
 import android.app.Activity;
@@ -20,7 +21,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
-import android.text.Editable;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.method.ScrollingMovementMethod;
@@ -47,8 +47,10 @@ import com.hoho.android.usbserial.driver.UsbSerialPort;
 import com.hoho.android.usbserial.driver.UsbSerialProber;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.EnumSet;
+
+import de.kai_morich.simple_usb_terminal.ch9329.CH9329ResponseDataService;
+import de.kai_morich.simple_usb_terminal.enums.CH9329ResponseStatus;
 
 public class TerminalFragment extends Fragment implements ServiceConnection, SerialListener {
 
@@ -68,8 +70,10 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     private boolean initialStart = true;
     private boolean hexEnabled = false;
     private boolean controlLinesEnabled = false;
-    private boolean pendingNewline = false;
     private String newline = TextUtil.newline_crlf;
+
+    private final static String TAG = "TerminalFragment";
+    private CH9329ResponseDataService ch9329ResponseDataService;
 
     public TerminalFragment() {
         broadcastReceiver = new BroadcastReceiver() {
@@ -98,6 +102,8 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         // https://stackoverflow.com/questions/6812003/difference-between-oncreate-and-onstart
         Context context = getContext();
         loadCH9329KeyCodeDataFromContext(context);
+
+        ch9329ResponseDataService = new CH9329ResponseDataService();
     }
 
     @Override
@@ -335,17 +341,20 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                 TextUtil.toHexString(sb, newline.getBytes());
                 msg = sb.toString();
                 data = TextUtil.fromHexString(msg);
-                Log.i("TerminalFragment", "hexEnabled, data=" + Arrays.toString(data));
-
+                LogByteArray(TAG, "sending hexEnabled data: ", data);
             } else {
                 msg = str;
 //                data = (str + newline).getBytes();
                 data = getSendingKeyCode(str);
-                Log.i("TerminalFragment", "No hexEnabled, data=" + Arrays.toString(data));
+                LogByteArray(TAG, "sending no hexEnabled data:", data);
             }
             SpannableStringBuilder spn = new SpannableStringBuilder(msg + '\n');
             spn.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.colorSendText)), 0, spn.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
             receiveText.append(spn);
+
+            // reset receiving response
+            ch9329ResponseDataService.resetResponseData();
+
             service.write(data);
         } catch (SerialTimeoutException e) {
             status("write timeout: " + e.getMessage());
@@ -355,7 +364,17 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     }
 
     private void receive(byte[] data) {
-        if (hexEnabled) {
+        LogByteArray(TAG, "receive data:", data);
+
+        ch9329ResponseDataService.collectReceivingData(data);
+
+        CH9329ResponseStatus result = ch9329ResponseDataService.getResponseResult();
+        Log.i(TAG, "receive result: " + result);
+
+        String resultText = result == CH9329ResponseStatus.PENDING ? "." : ('\n' + result.name() + '\n');
+        receiveText.append(resultText);
+        /*
+        if (true || hexEnabled) {
             receiveText.append(TextUtil.toHexString(data) + '\n');
         } else {
             String msg = new String(data);
@@ -372,6 +391,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             }
             receiveText.append(TextUtil.toCaretString(msg, newline.length() != 0));
         }
+        */
     }
 
     void status(String str) {

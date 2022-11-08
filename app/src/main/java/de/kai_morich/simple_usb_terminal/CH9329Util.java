@@ -64,7 +64,7 @@ public class CH9329Util {
             resultKeyPressCode = buildCH9329KeyPressCode((byte) bytes[0], false);
         } else if (keyCodeStrWithShift != null) {
             byte[] bytes = fromHexString(keyCodeStrWithShift);
-            Log.i(TAG, "special key code to bytes=" + Arrays.toString(bytes));
+            LogByteArray(TAG, "this key needs shift: ", bytes);
             resultKeyPressCode = buildCH9329KeyPressCode((byte) bytes[0], true);
         } else {
             throw new RuntimeException("no proper code found");
@@ -118,10 +118,8 @@ public class CH9329Util {
         for (byte b : codesWithoutSum) {
             sum += b;
         }
-        Log.i(tag, "sum=" + sum);
+//        Log.i(tag, "sum=" + sum);
 
-        byte[] result = addX(13, codesWithoutSum, sum);
-        return result;
+        return addX(13, codesWithoutSum, sum);
     }
-
 }

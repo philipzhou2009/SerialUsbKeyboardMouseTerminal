@@ -27,8 +27,10 @@ public class CH9329KeyCodeMapData {
         // Load our JSON file.
         JSONResourceReader reader = new JSONResourceReader(context.getResources(), R.raw.ch9329_key_codes);
         CH9329KeyCodeData ch9329KeyCodeData = reader.constructUsingGson(CH9329KeyCodeData.class);
+        Log.i(TAG, "loadCH9329KeyCodeDataFromContext loading data:");
         Log.i(TAG, Collections.singletonList(ch9329KeyCodeData.getCh9329NormalKeyCodeMap()).toString());
         Log.i(TAG, Collections.singletonList(ch9329KeyCodeData.getCh9329ShiftKeyCodeMap()).toString());
+        Log.i(TAG, "loadCH9329KeyCodeDataFromContext done");
 
         setCH9329KeyCodeData(ch9329KeyCodeData);
         return ch9329KeyCodeData;
