@@ -59,7 +59,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     private final BroadcastReceiver broadcastReceiver;
     private int deviceId, portNum, baudRate;
     private UsbSerialPort usbSerialPort;
-    private SerialService service;
+    private SerialService serialService;
 
     private TextView receiveText;
     private TextView sendText;
@@ -117,16 +117,16 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     @Override
     public void onStart() {
         super.onStart();
-        if (service != null)
-            service.attach(this);
+        if (serialService != null)
+            serialService.attach(this);
         else
             getActivity().startService(new Intent(getActivity(), SerialService.class)); // prevents service destroy on unbind from recreated activity caused by orientation change
     }
 
     @Override
     public void onStop() {
-        if (service != null && !getActivity().isChangingConfigurations())
-            service.detach();
+        if (serialService != null && !getActivity().isChangingConfigurations())
+            serialService.detach();
         super.onStop();
     }
 
@@ -151,7 +151,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     public void onResume() {
         super.onResume();
         getActivity().registerReceiver(broadcastReceiver, new IntentFilter(Constants.INTENT_ACTION_GRANT_USB));
-        if (initialStart && service != null) {
+        if (initialStart && serialService != null) {
             initialStart = false;
             getActivity().runOnUiThread(this::connect);
         }
@@ -169,8 +169,8 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
     @Override
     public void onServiceConnected(ComponentName name, IBinder binder) {
-        service = ((SerialService.SerialBinder) binder).getService();
-        service.attach(this);
+        serialService = ((SerialService.SerialBinder) binder).getService();
+        serialService.attach(this);
         if (initialStart && isResumed()) {
             initialStart = false;
             getActivity().runOnUiThread(this::connect);
@@ -179,7 +179,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
     @Override
     public void onServiceDisconnected(ComponentName name) {
-        service = null;
+        serialService = null;
     }
 
     /*
@@ -310,7 +310,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             usbSerialPort.open(usbConnection);
             usbSerialPort.setParameters(baudRate, UsbSerialPort.DATABITS_8, UsbSerialPort.STOPBITS_1, UsbSerialPort.PARITY_NONE);
             SerialSocket socket = new SerialSocket(getActivity().getApplicationContext(), usbConnection, usbSerialPort);
-            service.connect(socket);
+            serialService.connect(socket);
             // usb connect is not asynchronous. connect-success and connect-error are returned immediately from socket.connect
             // for consistency to bluetooth/bluetooth-LE app use same SerialListener and SerialService classes
             onSerialConnect();
@@ -322,7 +322,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     private void disconnect() {
         connected = Connected.False;
         controlLines.stop();
-        service.disconnect();
+        serialService.disconnect();
         usbSerialPort = null;
     }
 
@@ -355,11 +355,13 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             // reset receiving response
             ch9329ResponseDataService.resetResponseData();
 
-            service.write(data);
+            serialService.write(data);
         } catch (SerialTimeoutException e) {
             status("write timeout: " + e.getMessage());
         } catch (Exception e) {
-            onSerialIoError(e);
+//            onSerialIoError(e);
+            receiveText.append(e.getMessage() + '\n');
+            receiveText.append("Please retry without unknown char" + '\n');
         }
     }
 
@@ -367,14 +369,15 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         LogByteArray(TAG, "receive data:", data);
 
         ch9329ResponseDataService.collectReceivingData(data);
-
-        CH9329ResponseStatus result = ch9329ResponseDataService.getResponseResult();
+        CH9329ResponseStatus result = ch9329ResponseDataService.getLatestResponseStatus();
         Log.i(TAG, "receive result: " + result);
 
-        String resultText = result == CH9329ResponseStatus.PENDING ? "." : ('\n' + result.name() + '\n');
-        receiveText.append(resultText);
+        if (result != CH9329ResponseStatus.PENDING) {
+            receiveText.append((result.name() + '\n'));
+        }
+
         /*
-        if (true || hexEnabled) {
+        if (hexEnabled) {
             receiveText.append(TextUtil.toHexString(data) + '\n');
         } else {
             String msg = new String(data);

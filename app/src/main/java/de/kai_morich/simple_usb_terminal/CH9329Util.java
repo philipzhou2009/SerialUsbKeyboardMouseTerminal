@@ -67,7 +67,7 @@ public class CH9329Util {
             LogByteArray(TAG, "this key needs shift: ", bytes);
             resultKeyPressCode = buildCH9329KeyPressCode((byte) bytes[0], true);
         } else {
-            throw new RuntimeException("no proper code found");
+            throw new RuntimeException("no proper code found for -->" + c + "<--");
         }
 
         return resultKeyPressCode;

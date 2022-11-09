@@ -4,6 +4,7 @@ import android.util.Log;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.List;
 
 public class MiscUtil {
 
@@ -47,6 +48,16 @@ public class MiscUtil {
 
     public static void LogByteArray(String tag, String prefix, byte[] bytes) {
         Log.i(tag, prefix + bytesToHexWithSpace(bytes));
+    }
+
+    public static void LogByteArray(String tag, String prefix, List<Byte> bytes) {
+        int listSize = bytes.size();
+        byte[] targetBytes = new byte[listSize];
+        for (int i = 0; i < listSize; i++) {
+            targetBytes[i] = bytes.get(i);
+        }
+
+        Log.i(tag, prefix + bytesToHexWithSpace(targetBytes));
     }
 
     public static byte[] addX(int n, byte arr[], byte x) {
