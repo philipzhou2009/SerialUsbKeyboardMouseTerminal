@@ -1,5 +1,7 @@
 package de.kai_morich.simple_usb_terminal;
 
+import android.util.Log;
+
 import org.junit.jupiter.api.Test;
 
 class TextUtilTest {
@@ -13,7 +15,7 @@ class TextUtilTest {
         TextUtil.toHexString(sb, TextUtil.newline_crlf.getBytes());
         String msg = sb.toString();
 
-        LogUtil.i("xxx", msg);
+        Log.i("xxx", msg);
 
     }
 }

@@ -1,9 +1,10 @@
 package de.kai_morich.simple_usb_terminal;
 
-import java.io.ByteArrayOutputStream;
+import android.util.Log;
+
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.stream.IntStream;
+import java.util.List;
 
 public class MiscUtil {
 
@@ -41,7 +42,40 @@ public class MiscUtil {
     }
 
     public static void LogByteArray(String tag, byte[] bytes) {
-        LogUtil.i(tag, Arrays.toString(bytes));
-        LogUtil.i(tag, bytesToHexWithSpace(bytes));
+        Log.i(tag, Arrays.toString(bytes));
+        Log.i(tag, bytesToHexWithSpace(bytes));
     }
+
+    public static void LogByteArray(String tag, String prefix, byte[] bytes) {
+        Log.i(tag, prefix + bytesToHexWithSpace(bytes));
+    }
+
+    public static void LogByteArray(String tag, String prefix, List<Byte> bytes) {
+        int listSize = bytes.size();
+        byte[] targetBytes = new byte[listSize];
+        for (int i = 0; i < listSize; i++) {
+            targetBytes[i] = bytes.get(i);
+        }
+
+        Log.i(tag, prefix + bytesToHexWithSpace(targetBytes));
+    }
+
+    public static byte[] addX(int n, byte arr[], byte x) {
+        int i;
+
+        // create a new array of size n+1
+        byte newarr[] = new byte[n + 1];
+
+        // insert the elements from
+        // the old array into the new array
+        // insert all elements till n
+        // then insert x at n+1
+        for (i = 0; i < n; i++)
+            newarr[i] = arr[i];
+
+        newarr[n] = x;
+
+        return newarr;
+    }
+
 }

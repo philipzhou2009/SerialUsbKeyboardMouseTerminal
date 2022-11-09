@@ -1,7 +1,8 @@
 package de.kai_morich.simple_usb_terminal;
 
-import static de.kai_morich.simple_usb_terminal.CH9329Util.addNewLineToCH9329Code;
-import static de.kai_morich.simple_usb_terminal.CH9329Util.convertStringToCH9329Code;
+import static de.kai_morich.simple_usb_terminal.CH9329Util.getSendingKeyCode;
+import static de.kai_morich.simple_usb_terminal.MiscUtil.LogByteArray;
+import static de.kai_morich.simple_usb_terminal.ch9329.CH9329KeyCodeMapData.loadCH9329KeyCodeDataFromContext;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -20,7 +21,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
-import android.text.Editable;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.method.ScrollingMovementMethod;
@@ -47,12 +47,10 @@ import com.hoho.android.usbserial.driver.UsbSerialPort;
 import com.hoho.android.usbserial.driver.UsbSerialProber;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.EnumSet;
 
-import de.kai_morich.simple_usb_terminal.models.CH9329KeyCodeData;
-import de.kai_morich.simple_usb_terminal.utils.JSONResourceReader;
+import de.kai_morich.simple_usb_terminal.ch9329.CH9329ResponseDataService;
+import de.kai_morich.simple_usb_terminal.enums.CH9329ResponseStatus;
 
 public class TerminalFragment extends Fragment implements ServiceConnection, SerialListener {
 
@@ -61,7 +59,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     private final BroadcastReceiver broadcastReceiver;
     private int deviceId, portNum, baudRate;
     private UsbSerialPort usbSerialPort;
-    private SerialService service;
+    private SerialService serialService;
 
     private TextView receiveText;
     private TextView sendText;
@@ -72,8 +70,10 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     private boolean initialStart = true;
     private boolean hexEnabled = false;
     private boolean controlLinesEnabled = false;
-    private boolean pendingNewline = false;
     private String newline = TextUtil.newline_crlf;
+
+    private final static String TAG = "TerminalFragment";
+    private CH9329ResponseDataService ch9329ResponseDataService;
 
     public TerminalFragment() {
         broadcastReceiver = new BroadcastReceiver() {
@@ -99,15 +99,11 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         portNum = getArguments().getInt("port");
         baudRate = getArguments().getInt("baud");
 
-        Context context = getContext();
-
         // https://stackoverflow.com/questions/6812003/difference-between-oncreate-and-onstart
-        // Load our JSON file.
-        JSONResourceReader reader = new JSONResourceReader(context.getResources(), R.raw.ch9329_key_codes);
-        CH9329KeyCodeData ch9329KeyCodeData = reader.constructUsingGson(CH9329KeyCodeData.class);
-        Log.i("TerminalFragment", Collections.singletonList(ch9329KeyCodeData.getCh9329NormalKeyCodeMap()).toString());
-        Log.i("TerminalFragment", Collections.singletonList(ch9329KeyCodeData.getCh9329ShiftKeyCodeMap()).toString());
+        Context context = getContext();
+        loadCH9329KeyCodeDataFromContext(context);
 
+        ch9329ResponseDataService = new CH9329ResponseDataService();
     }
 
     @Override
@@ -121,16 +117,16 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     @Override
     public void onStart() {
         super.onStart();
-        if (service != null)
-            service.attach(this);
+        if (serialService != null)
+            serialService.attach(this);
         else
             getActivity().startService(new Intent(getActivity(), SerialService.class)); // prevents service destroy on unbind from recreated activity caused by orientation change
     }
 
     @Override
     public void onStop() {
-        if (service != null && !getActivity().isChangingConfigurations())
-            service.detach();
+        if (serialService != null && !getActivity().isChangingConfigurations())
+            serialService.detach();
         super.onStop();
     }
 
@@ -155,7 +151,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     public void onResume() {
         super.onResume();
         getActivity().registerReceiver(broadcastReceiver, new IntentFilter(Constants.INTENT_ACTION_GRANT_USB));
-        if (initialStart && service != null) {
+        if (initialStart && serialService != null) {
             initialStart = false;
             getActivity().runOnUiThread(this::connect);
         }
@@ -173,8 +169,8 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
     @Override
     public void onServiceConnected(ComponentName name, IBinder binder) {
-        service = ((SerialService.SerialBinder) binder).getService();
-        service.attach(this);
+        serialService = ((SerialService.SerialBinder) binder).getService();
+        serialService.attach(this);
         if (initialStart && isResumed()) {
             initialStart = false;
             getActivity().runOnUiThread(this::connect);
@@ -183,7 +179,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
     @Override
     public void onServiceDisconnected(ComponentName name) {
-        service = null;
+        serialService = null;
     }
 
     /*
@@ -314,7 +310,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             usbSerialPort.open(usbConnection);
             usbSerialPort.setParameters(baudRate, UsbSerialPort.DATABITS_8, UsbSerialPort.STOPBITS_1, UsbSerialPort.PARITY_NONE);
             SerialSocket socket = new SerialSocket(getActivity().getApplicationContext(), usbConnection, usbSerialPort);
-            service.connect(socket);
+            serialService.connect(socket);
             // usb connect is not asynchronous. connect-success and connect-error are returned immediately from socket.connect
             // for consistency to bluetooth/bluetooth-LE app use same SerialListener and SerialService classes
             onSerialConnect();
@@ -326,7 +322,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     private void disconnect() {
         connected = Connected.False;
         controlLines.stop();
-        service.disconnect();
+        serialService.disconnect();
         usbSerialPort = null;
     }
 
@@ -345,26 +341,42 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                 TextUtil.toHexString(sb, newline.getBytes());
                 msg = sb.toString();
                 data = TextUtil.fromHexString(msg);
-                Log.i("TerminalFragment", "hexEnabled, data=" + Arrays.toString(data));
-
+                LogByteArray(TAG, "sending hexEnabled data: ", data);
             } else {
                 msg = str;
 //                data = (str + newline).getBytes();
-                data = addNewLineToCH9329Code(convertStringToCH9329Code(str));
-                Log.i("TerminalFragment", "No hexEnabled, data=" + Arrays.toString(data));
+                data = getSendingKeyCode(str);
+                LogByteArray(TAG, "sending no hexEnabled data:", data);
             }
             SpannableStringBuilder spn = new SpannableStringBuilder(msg + '\n');
             spn.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.colorSendText)), 0, spn.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
             receiveText.append(spn);
-            service.write(data);
+
+            // reset receiving response
+            ch9329ResponseDataService.resetResponseData();
+
+            serialService.write(data);
         } catch (SerialTimeoutException e) {
             status("write timeout: " + e.getMessage());
         } catch (Exception e) {
-            onSerialIoError(e);
+//            onSerialIoError(e);
+            receiveText.append(e.getMessage() + '\n');
+            receiveText.append("Please retry without unknown char" + '\n');
         }
     }
 
     private void receive(byte[] data) {
+        LogByteArray(TAG, "receive data:", data);
+
+        ch9329ResponseDataService.collectReceivingData(data);
+        CH9329ResponseStatus result = ch9329ResponseDataService.getLatestResponseStatus();
+        Log.i(TAG, "receive result: " + result);
+
+        if (result != CH9329ResponseStatus.PENDING) {
+            receiveText.append((result.name() + '\n'));
+        }
+
+        /*
         if (hexEnabled) {
             receiveText.append(TextUtil.toHexString(data) + '\n');
         } else {
@@ -382,6 +394,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             }
             receiveText.append(TextUtil.toCaretString(msg, newline.length() != 0));
         }
+        */
     }
 
     void status(String str) {
