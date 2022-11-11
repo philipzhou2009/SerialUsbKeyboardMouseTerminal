@@ -13,6 +13,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.res.Resources;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbManager;
@@ -51,6 +52,7 @@ import java.util.EnumSet;
 
 import de.kai_morich.simple_usb_terminal.ch9329.CH9329ResponseDataService;
 import de.kai_morich.simple_usb_terminal.enums.CH9329ResponseStatus;
+import de.kai_morich.simple_usb_terminal.services.PredefinedFlowDataService;
 
 public class TerminalFragment extends Fragment implements ServiceConnection, SerialListener {
 
@@ -74,6 +76,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
     private final static String TAG = "TerminalFragment";
     private CH9329ResponseDataService ch9329ResponseDataService;
+    private PredefinedFlowDataService predefinedFlowDataService;
 
     public TerminalFragment() {
         broadcastReceiver = new BroadcastReceiver() {
@@ -104,6 +107,8 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         loadCH9329KeyCodeDataFromContext(context);
 
         ch9329ResponseDataService = new CH9329ResponseDataService();
+        Resources resources = context.getResources();
+        this.predefinedFlowDataService = new PredefinedFlowDataService(resources);
     }
 
     @Override
@@ -200,6 +205,10 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
         View sendBtn = view.findViewById(R.id.send_btn);
         sendBtn.setOnClickListener(v -> send(sendText.getText().toString()));
+
+        View shortcutBtn0 = view.findViewById(R.id.shortcut_btn0);
+        shortcutBtn0.setOnClickListener(v -> send(sendText.getText().toString()));
+
         controlLines = new ControlLines(view);
         return view;
     }

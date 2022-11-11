@@ -1,0 +1,35 @@
+[
+  {
+    "flowName": "Normal Login",
+    "steps": [
+      {
+        "name": "",
+        "mode": "SEQ",
+        "keys": [
+          "r695898"
+        ]
+      },
+      {
+        "name": "",
+        "mode": "SIM",
+        "keys": [
+          "Tab"
+        ]
+      },
+      {
+        "name": "",
+        "mode": "SEQ",
+        "keys": [
+          "12345678"
+        ]
+      },
+      {
+        "name": "",
+        "mode": "SIM",
+        "keys": [
+          "Enter"
+        ]
+      }
+    ]
+  }
+]
