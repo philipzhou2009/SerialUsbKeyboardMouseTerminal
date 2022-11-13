@@ -4,6 +4,7 @@ import android.content.Context;
 import android.util.Log;
 
 import java.util.Collections;
+import java.util.Map;
 
 import de.kai_morich.simple_usb_terminal.R;
 import de.kai_morich.simple_usb_terminal.models.CH9329KeyCodeData;
@@ -28,8 +29,11 @@ public class CH9329KeyCodeMapData {
         JSONResourceReader reader = new JSONResourceReader(context.getResources(), R.raw.ch9329_key_codes);
         CH9329KeyCodeData ch9329KeyCodeData = reader.constructUsingGson(CH9329KeyCodeData.class);
         Log.i(TAG, "loadCH9329KeyCodeDataFromContext loading data:");
-        Log.i(TAG, Collections.singletonList(ch9329KeyCodeData.getCh9329NormalKeyCodeMap()).toString());
+        Map<String, String> ch9329NormalKeyCodeMap = ch9329KeyCodeData.getCh9329NormalKeyCodeMap();
+        Log.i(TAG, Collections.singletonList(ch9329NormalKeyCodeMap).toString());
         Log.i(TAG, Collections.singletonList(ch9329KeyCodeData.getCh9329ShiftKeyCodeMap()).toString());
+        Log.i(TAG, Collections.singletonList(ch9329KeyCodeData.getCh9329SpecialKeyCodeMap()).toString());
+        Log.i(TAG, Collections.singletonList(ch9329KeyCodeData.getCh9329ControlKeyCodeMap()).toString());
         Log.i(TAG, "loadCH9329KeyCodeDataFromContext done");
 
         setCH9329KeyCodeData(ch9329KeyCodeData);

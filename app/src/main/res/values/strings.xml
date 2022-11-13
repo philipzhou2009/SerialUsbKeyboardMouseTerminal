@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">Simple USB Terminal</string>
     <string name="devices">USB Devices</string>
+    <string name="sid_tab_pw_enter"><![CDATA[SID => Tab => PW => Enter]]></string>
 </resources>

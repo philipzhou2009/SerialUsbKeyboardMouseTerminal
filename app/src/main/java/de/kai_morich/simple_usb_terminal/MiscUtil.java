@@ -36,9 +36,8 @@ public class MiscUtil {
             hexChars[j * 3 + 1] = HEX_ARRAY[v & 0x0F];
             hexChars[j * 3 + 2] = " ".getBytes(StandardCharsets.UTF_8)[0];
         }
-        String s = new String(hexChars, StandardCharsets.UTF_8);
 
-        return s;
+        return new String(hexChars, StandardCharsets.UTF_8);
     }
 
     public static void LogByteArray(String tag, byte[] bytes) {
@@ -50,7 +49,7 @@ public class MiscUtil {
         Log.i(tag, prefix + bytesToHexWithSpace(bytes));
     }
 
-    public static void LogByteArray(String tag, String prefix, List<Byte> bytes) {
+    public static void LogByteList(String tag, String prefix, List<Byte> bytes) {
         int listSize = bytes.size();
         byte[] targetBytes = new byte[listSize];
         for (int i = 0; i < listSize; i++) {

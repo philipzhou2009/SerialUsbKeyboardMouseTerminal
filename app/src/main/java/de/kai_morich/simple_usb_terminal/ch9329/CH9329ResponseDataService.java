@@ -1,7 +1,5 @@
 package de.kai_morich.simple_usb_terminal.ch9329;
 
-import static de.kai_morich.simple_usb_terminal.MiscUtil.LogByteArray;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -13,7 +11,6 @@ public class CH9329ResponseDataService {
     public static final String TAG = "TerminalFragment";
     public static List<Byte> successResponseCodes = Arrays.asList((byte) 0x57, (byte) 0xAB, (byte) 0x00, (byte) 0x82, (byte) 0x01, (byte) 0x00, (byte) 0x85);
 
-    private long responseStartTime;
     private final List<byte[]> responseDataStorage = new ArrayList<>();
     private CH9329ResponseStatus latestResponseStatus;
 
@@ -42,7 +39,7 @@ public class CH9329ResponseDataService {
                 totalResponseData.add(bCode);
             }
         }
-        LogByteArray(TAG, "total response data=", totalResponseData);
+//        MiscUtil.LogByteList(TAG, "total response data=", totalResponseData);
 
         int totalSize = totalResponseData.size();
         if (totalSize % 7 != 0) {
@@ -51,7 +48,7 @@ public class CH9329ResponseDataService {
 
         for (int i = 0; i < totalSize; i = i + 7) {
             List<Byte> subList = totalResponseData.subList(i, i + Math.min(totalSize - i, 7));
-            LogByteArray(TAG, "sub response list=", subList);
+//            MiscUtil.LogByteList(TAG, "sub response list=", subList);
             if (!subList.equals(successResponseCodes)) {
                 return CH9329ResponseStatus.ERROR;
             }
@@ -61,7 +58,6 @@ public class CH9329ResponseDataService {
     }
 
     public void resetResponseData() {
-//        this.setResponseStartTime(Calendar.getInstance().getTimeInMillis());
         responseDataStorage.clear();
         this.latestResponseStatus = null;
     }

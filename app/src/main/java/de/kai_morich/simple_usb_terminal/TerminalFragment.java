@@ -13,6 +13,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.res.Resources;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbManager;
@@ -32,6 +33,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -48,9 +50,14 @@ import com.hoho.android.usbserial.driver.UsbSerialProber;
 
 import java.io.IOException;
 import java.util.EnumSet;
+import java.util.List;
 
 import de.kai_morich.simple_usb_terminal.ch9329.CH9329ResponseDataService;
 import de.kai_morich.simple_usb_terminal.enums.CH9329ResponseStatus;
+import de.kai_morich.simple_usb_terminal.enums.PingStepWorkingMode;
+import de.kai_morich.simple_usb_terminal.models.PingFlow;
+import de.kai_morich.simple_usb_terminal.models.PingFlow.PingStep;
+import de.kai_morich.simple_usb_terminal.services.PredefinedFlowDataService;
 
 public class TerminalFragment extends Fragment implements ServiceConnection, SerialListener {
 
@@ -74,6 +81,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
     private final static String TAG = "TerminalFragment";
     private CH9329ResponseDataService ch9329ResponseDataService;
+    private PredefinedFlowDataService predefinedFlowDataService;
 
     public TerminalFragment() {
         broadcastReceiver = new BroadcastReceiver() {
@@ -99,10 +107,17 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         portNum = getArguments().getInt("port");
         baudRate = getArguments().getInt("baud");
 
-        // https://stackoverflow.com/questions/6812003/difference-between-oncreate-and-onstart
         Context context = getContext();
+        Resources resources = context.getResources();
+
+        // load key code map
         loadCH9329KeyCodeDataFromContext(context);
 
+        // laod working flows
+        this.predefinedFlowDataService = new PredefinedFlowDataService(resources);
+        this.predefinedFlowDataService.loadPredefinedFlowData();
+
+        //
         ch9329ResponseDataService = new CH9329ResponseDataService();
     }
 
@@ -200,8 +215,20 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
         View sendBtn = view.findViewById(R.id.send_btn);
         sendBtn.setOnClickListener(v -> send(sendText.getText().toString()));
+
+        List<PingFlow> predefinedFlows = this.predefinedFlowDataService.getPredefinedFlows();
+        for (int i = 0; i < 4; i++) {
+            bindFlowButton(predefinedFlows.get(i), view, R.id.flow_btn0 + i);
+        }
+
         controlLines = new ControlLines(view);
         return view;
+    }
+
+    private void bindFlowButton(PingFlow pingFlow, View view, int resId) {
+        Button flowBtn = view.findViewById(resId);
+        flowBtn.setText(pingFlow.getFlowName());
+        flowBtn.setOnClickListener(v -> sendFlow(pingFlow));
     }
 
     @Override
@@ -334,7 +361,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         try {
             String msg;
             byte[] data;
-            Log.i("TerminalFragment", "sending:" + str + "|||");
+            Log.i(TAG, "sending string:-->" + str + "<--");
             if (hexEnabled) {
                 StringBuilder sb = new StringBuilder();
                 TextUtil.toHexString(sb, TextUtil.fromHexString(str));
@@ -346,7 +373,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                 msg = str;
 //                data = (str + newline).getBytes();
                 data = getSendingKeyCode(str);
-                LogByteArray(TAG, "sending no hexEnabled data:", data);
+//                LogByteArray(TAG, "sending no hexEnabled data:", data);
             }
             SpannableStringBuilder spn = new SpannableStringBuilder(msg + '\n');
             spn.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.colorSendText)), 0, spn.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
@@ -366,13 +393,12 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     }
 
     private void receive(byte[] data) {
-        LogByteArray(TAG, "receive data:", data);
-
+//        LogByteArray(TAG, "receive data:", data);
         ch9329ResponseDataService.collectReceivingData(data);
         CH9329ResponseStatus result = ch9329ResponseDataService.getLatestResponseStatus();
-        Log.i(TAG, "receive result: " + result);
-
+//        Log.i(TAG, "receive result: " + result);
         if (result != CH9329ResponseStatus.PENDING) {
+            Log.i(TAG, "receiving response status: " + result);
             receiveText.append((result.name() + '\n'));
         }
 
@@ -401,6 +427,44 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         SpannableStringBuilder spn = new SpannableStringBuilder(str + '\n');
         spn.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.colorStatusText)), 0, spn.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
         receiveText.append(spn);
+    }
+
+    /*
+     * sending flow
+     */
+    void sendFlow(PingFlow pingFlow) {
+        List<PingStep> pingSteps = pingFlow.getPingSteps();
+        for (PingStep step : pingSteps) {
+            this.runStep(step);
+        }
+    }
+
+    void runStep(PingStep step) {
+        List<String> keys = step.getKeys();
+        PingStepWorkingMode mode = step.getMode();
+        String stepName = step.getName();
+        String stepKeys = keys.toString();
+        Log.i(TAG, "running step name=" + stepName + ", mode=" + mode + ", keys=" + stepKeys);
+
+        if (mode == PingStepWorkingMode.SEQ) {
+            this.send(keys.get(0));
+        } else {
+            try {
+                byte[] data = getSendingKeyCode(keys);
+
+
+                SpannableStringBuilder spn = new SpannableStringBuilder(stepKeys + '\n');
+                spn.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.colorSendText)), 0, spn.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                receiveText.append(spn);
+
+                // reset receiving response
+                ch9329ResponseDataService.resetResponseData();
+
+                serialService.write(data);
+            } catch (Exception e) {
+                Log.e(TAG, e.getMessage());
+            }
+        }
     }
 
     /*

@@ -3,21 +3,27 @@ package de.kai_morich.simple_usb_terminal;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static de.kai_morich.simple_usb_terminal.CH9329Util.convertCharIntoCH9329KeyPressCode;
+import static de.kai_morich.simple_usb_terminal.CH9329Util.getSimultaneousKeysPressData;
+import static de.kai_morich.simple_usb_terminal.MiscUtil.LogByteArray;
 
 import android.util.Log;
 
-import org.junit.jupiter.api.Test;
+import androidx.annotation.NonNull;
 
-import java.io.InputStream;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 
 import de.kai_morich.simple_usb_terminal.models.CH9329KeyCodeData;
-import de.kai_morich.simple_usb_terminal.utils.JSONResourceReader;
 
 public class CH9329UtilTest {
 
+    private static final String TAG = "CH9329UtilTest";
     private static final byte[] HEX_ARRAY = "0123456789ABCDEF".getBytes(StandardCharsets.US_ASCII);
 
     public static String bytesToHex(byte[] bytes) {
@@ -43,15 +49,6 @@ public class CH9329UtilTest {
         return s;
     }
 
-    @Test
-    void givenChar_fromCharToHex_returnsCH9329HexCodes() {
-
-        byte[] actual = CH9329Util.fromCharToHex('a');
-        Log.i("fromCharToHex", Arrays.toString(actual));
-        Log.i("fromCharToHex", bytesToHexWithSpace(actual));
-
-        assertNotNull(actual);
-    }
 
     @Test
     void givenString_convertStringToCH9329Code_returnConvertedCodes() {
@@ -81,13 +78,48 @@ public class CH9329UtilTest {
         assertArrayEquals(new byte[]{0x57, (byte) 0xAB, 0x00, 0x02, 0x08, 0x02, 0x00, 0x1F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x2d}, actual);
     }
 
-    @Test
-    void givenFullCH9329KeyCodeData_convertCharIntoCH9329KeyPressCode_canConvertAll() {
+    @ParameterizedTest
+    @CsvSource({"Tab", "Ctrl_Alt_Delete"})
+    void name(String input) {
+        CH9329KeyCodeData ch9329KeyCodeData = createCh9329KeyCodeData();
 
-        InputStream in = this.getClass().getClassLoader().getResourceAsStream("ch9329_key_codes.json");
-        JSONResourceReader reader = new JSONResourceReader(in);
-        CH9329KeyCodeData ch9329KeyCodeData = reader.constructUsingGson(CH9329KeyCodeData.class);
+        String[] inputArray = input.split("_");
+        List<String> inputList = Arrays.asList(inputArray);
 
-        assertNotNull(ch9329KeyCodeData);
+        byte[] actual = getSimultaneousKeysPressData(inputList, ch9329KeyCodeData);
+
+        LogByteArray(TAG, "test result:", actual);
+        assertNotNull(actual);
+    }
+
+    @NonNull
+    private CH9329KeyCodeData createCh9329KeyCodeData() {
+        CH9329KeyCodeData ch9329KeyCodeData = new CH9329KeyCodeData();
+        HashMap<String, String> ch9329NormalKeyCodeMap = new HashMap<String, String>() {{
+            put("a", "04");
+            put("b", "05");
+        }};
+        ch9329KeyCodeData.setCh9329NormalKeyCodeMap(ch9329NormalKeyCodeMap);
+
+        HashMap<String, String> ch9329ShiftKeyCodeMap = new HashMap<String, String>() {{
+            put("A", "04");
+            put("B", "05");
+        }};
+        ch9329KeyCodeData.setCh9329ShiftKeyCodeMap(ch9329ShiftKeyCodeMap);
+
+        HashMap<String, String> ch9329SpecialKeyCodeMap = new HashMap<String, String>() {{
+            put("Tab", "2B");
+            put("Delete", "4C");
+        }};
+        ch9329KeyCodeData.setCh9329SpecialKeyCodeMap(ch9329SpecialKeyCodeMap);
+
+        HashMap<String, String> ch9329ControlKeyCodeMap = new HashMap<String, String>() {{
+            put("Ctrl", "01");
+            put("Shift", "02");
+            put("Alt", "04");
+        }};
+        ch9329KeyCodeData.setCh9329ControlKeyCodeMap(ch9329ControlKeyCodeMap);
+
+        return ch9329KeyCodeData;
     }
 }

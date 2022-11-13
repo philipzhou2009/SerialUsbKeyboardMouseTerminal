@@ -1,0 +1,94 @@
+[
+  {
+    "flowName": "User PW Login",
+    "pingSteps": [
+      {
+        "name": "sid",
+        "mode": "SEQ",
+        "keys": [
+          "sid123"
+        ]
+      },
+      {
+        "name": "tab",
+        "mode": "SIM",
+        "keys": [
+          "Tab"
+        ]
+      },
+      {
+        "name": "pw",
+        "mode": "SEQ",
+        "keys": [
+          "pw123"
+        ]
+      },
+      {
+        "name": "enter",
+        "mode": "SIM",
+        "keys": [
+          "Enter"
+        ]
+      }
+    ]
+  },
+  {
+    "flowName": "Lock Screen Login",
+    "pingSteps": [
+      {
+        "name": "Ctrl+Alt+Delete",
+        "mode": "SIM",
+        "keys": [
+          "Ctrl",
+          "Alt",
+          "Delete"
+        ]
+      },
+      {
+        "name": "pw",
+        "mode": "SEQ",
+        "keys": [
+          "pw123"
+        ]
+      },
+      {
+        "name": "enter",
+        "mode": "SIM",
+        "keys": [
+          "Enter"
+        ]
+      }
+    ]
+  },
+  {
+    "flowName": "PW Login",
+    "pingSteps": [
+      {
+        "name": "PW",
+        "mode": "SEQ",
+        "keys": [
+          "pw123"
+        ]
+      },
+      {
+        "name": "Enter",
+        "mode": "SIM",
+        "keys": [
+          "Enter"
+        ]
+      }
+    ]
+  },
+  {
+    "flowName": "PW Only",
+    "pingSteps": [
+      {
+        "name": "pw",
+        "mode": "SEQ",
+        "keys": [
+          "pw123"
+        ]
+      }
+    ]
+  }
+]
