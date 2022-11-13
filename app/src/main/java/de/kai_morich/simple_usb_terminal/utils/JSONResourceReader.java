@@ -23,7 +23,8 @@ public class JSONResourceReader {
 
     // Our JSON, in string form.
     private String jsonString;
-    private static final String LOGTAG = JSONResourceReader.class.getSimpleName();
+//    private static final String LOGTAG = JSONResourceReader.class.getSimpleName();
+    private static final String LOGTAG = "TerminalFragment";
 
     // === [ Public API ] ======================================================
 

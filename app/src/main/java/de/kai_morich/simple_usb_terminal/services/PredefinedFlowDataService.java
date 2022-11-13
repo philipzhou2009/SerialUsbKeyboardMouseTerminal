@@ -1,6 +1,7 @@
 package de.kai_morich.simple_usb_terminal.services;
 
 import android.content.res.Resources;
+import android.util.Log;
 
 import com.google.gson.reflect.TypeToken;
 
@@ -10,13 +11,14 @@ import java.util.Collections;
 import java.util.List;
 
 import de.kai_morich.simple_usb_terminal.R;
-import de.kai_morich.simple_usb_terminal.models.Flow;
+import de.kai_morich.simple_usb_terminal.models.PingFlow;
 import de.kai_morich.simple_usb_terminal.utils.JSONResourceReader;
 
 public class PredefinedFlowDataService {
 
-    private Resources resources;
-    private List<Flow> predefinedFlows = Collections.emptyList();
+    private final String TAG = "TerminalFragment";
+    private final Resources resources;
+    private List<PingFlow> predefinedPingFlows = Collections.emptyList();
     private int flowsResId = R.raw.flows;
 
     public PredefinedFlowDataService(Resources resources) {
@@ -27,18 +29,19 @@ public class PredefinedFlowDataService {
         InputStream flowInputStream = this.resources.openRawResource(this.flowsResId);
         JSONResourceReader jsonResourceReader = new JSONResourceReader(flowInputStream);
 
-        Type listType = new TypeToken<List<Flow>>(){}.getType();
-        List<Flow> list = jsonResourceReader.constructListUsingGson(listType);
+        Type listType = new TypeToken<List<PingFlow>>(){}.getType();
+        List<PingFlow> list = jsonResourceReader.constructListUsingGson(listType);
+        Log.i(TAG, "loadPredefinedFlowData, total loaded flows=" + list.size());
 
-        this.predefinedFlows = list;
+        this.predefinedPingFlows = list;
     }
 
     public Resources getResources() {
         return resources;
     }
 
-    public List<Flow> getPredefinedFlows() {
-        return predefinedFlows;
+    public List<PingFlow> getPredefinedFlows() {
+        return predefinedPingFlows;
     }
 
     public void setFlowsResId(int flowsResId) {

@@ -97,5 +97,14 @@
     ">": "37",
     "?": "38",
     "|": "31"
+  },
+  "ch9329SpecialKeyCodeMap": {
+    "Tab": "2B",
+    "Delete": "4C"
+  },
+  "ch9329ControlKeyCodeMap": {
+    "Ctrl": "01",
+    "Shift": "02",
+    "Alt": "04"
   }
 }

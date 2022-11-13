@@ -78,18 +78,39 @@
 
     </LinearLayout>
 
-    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="100sp"
-        android:gravity="center_vertical">
+        android:layout_height="200sp"
+        android:gravity="center_vertical"
+        android:orientation="vertical">
 
         <Button
-            android:id="@+id/shortcut_btn0"
+            android:id="@+id/flow_btn0"
             android:layout_width="match_parent"
             android:layout_height="50sp"
             android:layout_gravity="center_vertical"
-            android:text="@string/sid_tab_pw_enter" />
+            android:text="flow_btn0" />
 
+        <Button
+            android:id="@+id/flow_btn1"
+            android:layout_width="match_parent"
+            android:layout_height="50sp"
+            android:layout_gravity="center_vertical"
+            android:text="flow_btn1" />
+
+        <Button
+            android:id="@+id/flow_btn2"
+            android:layout_width="match_parent"
+            android:layout_height="50sp"
+            android:layout_gravity="center_vertical"
+            android:text="flow_btn2" />
+
+        <Button
+            android:id="@+id/flow_btn3"
+            android:layout_width="match_parent"
+            android:layout_height="50sp"
+            android:layout_gravity="center_vertical"
+            android:text="flow_btn3" />
     </LinearLayout>
 
     <View

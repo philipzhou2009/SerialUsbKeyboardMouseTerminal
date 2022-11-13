@@ -1,12 +1,12 @@
 [
   {
-    "flowName": "Normal Login",
-    "steps": [
+    "flowName": "User PW Login",
+    "pingSteps": [
       {
         "name": "sid",
         "mode": "SEQ",
         "keys": [
-          "r695898"
+          "sid123"
         ]
       },
       {
@@ -20,7 +20,7 @@
         "name": "pw",
         "mode": "SEQ",
         "keys": [
-          "12345678"
+          "pw123"
         ]
       },
       {
@@ -28,6 +28,65 @@
         "mode": "SIM",
         "keys": [
           "Enter"
+        ]
+      }
+    ]
+  },
+  {
+    "flowName": "Lock Screen Login",
+    "pingSteps": [
+      {
+        "name": "Ctrl+Alt+Delete",
+        "mode": "SIM",
+        "keys": [
+          "Ctrl",
+          "Alt",
+          "Delete"
+        ]
+      },
+      {
+        "name": "pw",
+        "mode": "SEQ",
+        "keys": [
+          "pw123"
+        ]
+      },
+      {
+        "name": "enter",
+        "mode": "SIM",
+        "keys": [
+          "Enter"
+        ]
+      }
+    ]
+  },
+  {
+    "flowName": "PW Login",
+    "pingSteps": [
+      {
+        "name": "PW",
+        "mode": "SEQ",
+        "keys": [
+          "pw123"
+        ]
+      },
+      {
+        "name": "Enter",
+        "mode": "SIM",
+        "keys": [
+          "Enter"
+        ]
+      }
+    ]
+  },
+  {
+    "flowName": "PW Only",
+    "pingSteps": [
+      {
+        "name": "pw",
+        "mode": "SEQ",
+        "keys": [
+          "pw123"
         ]
       }
     ]

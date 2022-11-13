@@ -2,37 +2,37 @@ package de.kai_morich.simple_usb_terminal.models;
 
 import java.util.List;
 
-import de.kai_morich.simple_usb_terminal.enums.InputStepWorkingMode;
+import de.kai_morich.simple_usb_terminal.enums.PingStepWorkingMode;
 
-public class Flow {
+public class PingFlow {
     String flowName;
-    List<Step> steps;
+    List<PingStep> pingSteps;
 
-    public Flow() {
+    public PingFlow() {
     }
 
-    public Flow(String flowName, List<Step> steps) {
+    public PingFlow(String flowName, List<PingStep> pingSteps) {
         this.flowName = flowName;
-        this.steps = steps;
+        this.pingSteps = pingSteps;
     }
 
     public String getFlowName() {
         return flowName;
     }
 
-    public List<Step> getSteps() {
-        return steps;
+    public List<PingStep> getPingSteps() {
+        return pingSteps;
     }
 
-    public static class Step {
+    public static class PingStep {
         String name;
-        InputStepWorkingMode mode;
+        PingStepWorkingMode mode;
         List<String> keys;
 
-        public Step() {
+        public PingStep() {
         }
 
-        public Step(String name, InputStepWorkingMode mode, List<String> keys) {
+        public PingStep(String name, PingStepWorkingMode mode, List<String> keys) {
             this.name = name;
             this.mode = mode;
             this.keys = keys;
@@ -42,7 +42,7 @@ public class Flow {
             return name;
         }
 
-        public InputStepWorkingMode getMode() {
+        public PingStepWorkingMode getMode() {
             return mode;
         }
 
