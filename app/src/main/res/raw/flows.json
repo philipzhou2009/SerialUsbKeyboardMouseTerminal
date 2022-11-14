@@ -5,6 +5,7 @@
       {
         "name": "sid",
         "mode": "SEQ",
+        "textMode": "PLAIN",
         "keys": [
           "sid123"
         ]
@@ -12,13 +13,15 @@
       {
         "name": "tab",
         "mode": "SIM",
+        "textMode": "PLAIN",
         "keys": [
           "Tab"
         ]
       },
       {
-        "name": "pw",
+        "name": "PW",
         "mode": "SEQ",
+        "textMode": "SECRET",
         "keys": [
           "pw123"
         ]
@@ -26,6 +29,7 @@
       {
         "name": "enter",
         "mode": "SIM",
+        "textMode": "PLAIN",
         "keys": [
           "Enter"
         ]
@@ -38,6 +42,7 @@
       {
         "name": "Ctrl+Alt+Delete",
         "mode": "SIM",
+        "textMode": "PLAIN",
         "keys": [
           "Ctrl",
           "Alt",
@@ -45,8 +50,9 @@
         ]
       },
       {
-        "name": "pw",
+        "name": "PW",
         "mode": "SEQ",
+        "textMode": "SECRET",
         "keys": [
           "pw123"
         ]
@@ -54,6 +60,7 @@
       {
         "name": "enter",
         "mode": "SIM",
+        "textMode": "PLAIN",
         "keys": [
           "Enter"
         ]
@@ -66,6 +73,7 @@
       {
         "name": "PW",
         "mode": "SEQ",
+        "textMode": "SECRET",
         "keys": [
           "pw123"
         ]
@@ -73,6 +81,7 @@
       {
         "name": "Enter",
         "mode": "SIM",
+        "textMode": "PLAIN",
         "keys": [
           "Enter"
         ]
@@ -85,6 +94,7 @@
       {
         "name": "pw",
         "mode": "SEQ",
+        "textMode": "SECRET",
         "keys": [
           "pw123"
         ]

@@ -2,6 +2,7 @@ package de.kai_morich.simple_usb_terminal.models;
 
 import java.util.List;
 
+import de.kai_morich.simple_usb_terminal.enums.PingStepTextMode;
 import de.kai_morich.simple_usb_terminal.enums.PingStepWorkingMode;
 
 public class PingFlow {
@@ -27,6 +28,7 @@ public class PingFlow {
     public static class PingStep {
         String name;
         PingStepWorkingMode mode;
+        PingStepTextMode textMode;
         List<String> keys;
 
         public PingStep() {
@@ -48,6 +50,14 @@ public class PingFlow {
 
         public List<String> getKeys() {
             return keys;
+        }
+
+        public PingStepTextMode getTextMode() {
+            return textMode;
+        }
+
+        public void setTextMode(PingStepTextMode textMode) {
+            this.textMode = textMode;
         }
     }
 }

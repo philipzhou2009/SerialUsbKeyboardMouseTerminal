@@ -54,6 +54,7 @@ import java.util.List;
 
 import de.kai_morich.simple_usb_terminal.ch9329.CH9329ResponseDataService;
 import de.kai_morich.simple_usb_terminal.enums.CH9329ResponseStatus;
+import de.kai_morich.simple_usb_terminal.enums.PingStepTextMode;
 import de.kai_morich.simple_usb_terminal.enums.PingStepWorkingMode;
 import de.kai_morich.simple_usb_terminal.models.PingFlow;
 import de.kai_morich.simple_usb_terminal.models.PingFlow.PingStep;
@@ -228,7 +229,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     private void bindFlowButton(PingFlow pingFlow, View view, int resId) {
         Button flowBtn = view.findViewById(resId);
         flowBtn.setText(pingFlow.getFlowName());
-        flowBtn.setOnClickListener(v -> sendFlow(pingFlow));
+        flowBtn.setOnClickListener(v -> startFlow(pingFlow));
     }
 
     @Override
@@ -432,7 +433,10 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     /*
      * sending flow
      */
-    void sendFlow(PingFlow pingFlow) {
+    void startFlow(PingFlow pingFlow) {
+        receiveText.append("--------------" + '\n');
+        receiveText.append("Sending..." + '\n');
+
         List<PingStep> pingSteps = pingFlow.getPingSteps();
         for (PingStep step : pingSteps) {
             this.runStep(step);
@@ -442,28 +446,27 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     void runStep(PingStep step) {
         List<String> keys = step.getKeys();
         PingStepWorkingMode mode = step.getMode();
+        PingStepTextMode textMode = step.getTextMode();
         String stepName = step.getName();
-        String stepKeys = keys.toString();
+        String keysStr = keys.toString();
+        String stepKeys = keysStr.substring(1, keysStr.length() - 1);
         Log.i(TAG, "running step name=" + stepName + ", mode=" + mode + ", keys=" + stepKeys);
 
-        if (mode == PingStepWorkingMode.SEQ) {
-            this.send(keys.get(0));
-        } else {
-            try {
-                byte[] data = getSendingKeyCode(keys);
+        try {
+            byte[] data = mode == PingStepWorkingMode.SEQ ? getSendingKeyCode(keys.get(0)) : getSendingKeyCode(keys);
 
+            stepKeys = textMode == PingStepTextMode.PLAIN ? stepKeys : "*******";
+            SpannableStringBuilder spn = new SpannableStringBuilder(stepKeys + '\n');
+            spn.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.colorSendText)), 0, spn.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+            receiveText.append(spn);
 
-                SpannableStringBuilder spn = new SpannableStringBuilder(stepKeys + '\n');
-                spn.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.colorSendText)), 0, spn.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-                receiveText.append(spn);
+            ch9329ResponseDataService.resetResponseData();
 
-                // reset receiving response
-                ch9329ResponseDataService.resetResponseData();
-
-                serialService.write(data);
-            } catch (Exception e) {
-                Log.e(TAG, e.getMessage());
-            }
+            serialService.write(data);
+        } catch (SerialTimeoutException e) {
+            status("write timeout: " + e.getMessage());
+        } catch (Exception e) {
+            receiveText.append(e.getMessage() + '\n');
         }
     }
 
