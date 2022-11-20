@@ -463,6 +463,9 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             ch9329ResponseDataService.resetResponseData();
 
             serialService.write(data);
+
+            // slow the input to give target response time
+            Thread.sleep(400);
         } catch (SerialTimeoutException e) {
             status("write timeout: " + e.getMessage());
         } catch (Exception e) {
